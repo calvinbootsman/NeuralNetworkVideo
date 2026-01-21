@@ -12,7 +12,7 @@ def generate_mnist_grid():
     # Load MNIST data
     transform = transforms.Compose([transforms.ToTensor()])
     trainset = torchvision.datasets.MNIST(root='./media/data', train=True,
-                                        download=True, transform=transform)
+                                        download=False, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=64,
                                             shuffle=True)
 
@@ -26,6 +26,10 @@ def generate_mnist_grid():
     # Save the image
     save_image(grid_img, './media/images/mnist_examples.png')
     print("Saved MNIST grid to ./media/images/mnist_examples.png")
+    # Save individual examples
+    for i in range(10):
+        save_image(images[i], f'./media/images/mnist_example_{i}.png')
+        print(f"Saved example {i} to ./media/images/mnist_example_{i}.png")
 
 if __name__ == '__main__':
     generate_mnist_grid()

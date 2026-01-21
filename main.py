@@ -221,15 +221,53 @@ class TrainingScene(VoiceoverScene):
         
         # --- (Existing Intro Part) ---
         mnist_img = ImageMobject("C:\\Users\\calvi\\Documents\\Projects\\ManimExperiment\\media\\images\\mnist_examples.png")
-        mnist_img.scale(0.8).move_to(ORIGIN + DOWN * 0.1)
+        mnist_img.scale(0.8).move_to(ORIGIN + DOWN * 0.1 + LEFT * 1.1)
 
-        with self.voiceover(text="In the learning phase, the model is trained on a large dataset. For this example we use a dataset containing handwritten numbers. During training we feed this images to the network and the model with slowly updates its parameters. ") as tracker:            
+        with self.voiceover(text="In the learning phase, the model is trained on a large dataset. For this example we use a dataset containing handwritten numbers.") as tracker:            
             self.play(FadeIn(mnist_img))
             title_text = Text("MNIST Dataset").set(font_size=20, color=WHITE).move_to(ORIGIN + UP * 0.9)
             self.play(Write(title_text, run_time=1))
 
+        with self.voiceover(text="During training we feed this images to the network and the model with slowly updates its parameters.") as tracker:
+            self.wait(1)
+            image_cell_width = mnist_img.get_width() / 8
+            image_cell_height = mnist_img.get_height() / 8
+
+            selection_square = Rectangle(
+                color=YELLOW,
+                width=image_cell_width,
+                height=image_cell_height,
+                stroke_width=0.4
+            )
+            selection_square.align_to(mnist_img, UL)
+
+            # rectangle with text in it
+            model_text = Text("Model").set(font_size=12, color=WHITE)
+            model_box = Rectangle(color=WHITE, width=0.65, height=0.35, stroke_width=0.4)
+            model_group = Group(model_box, model_text).arrange(ORIGIN, center=True).move_to(ORIGIN + RIGHT * 0.4)
+            arrow = Arrow(selection_square.get_right(), model_group.get_left(), buff=0.1, stroke_width=2, tip_length=0.15, color=WHITE)
+            arrow.add_updater(lambda m: m.become(Arrow(model_box.get_left() + LEFT * 0.5, model_box.get_left(), buff=0.05, stroke_width=1, tip_length=0.15, color=WHITE)))
+            model_group.add(arrow)
+
+            guess_top_text = Text("Prediction").set(font_size=12, color=WHITE)
+            guess_box = Square(color=WHITE, side_length=1, stroke_width=0.4)
+            guess_top_text.move_to(guess_box.get_top() + DOWN * 0.15)
+            guess_value = MathTex("7").set(font_size=48, color=WHITE)
+            guess_value.move_to(guess_box.get_center() + DOWN * 0.1)
+            guess_group = Group(guess_box, guess_top_text, guess_value).move_to(ORIGIN + RIGHT * 1.5)
+
+
+            self.play(FadeIn(selection_square), FadeIn(model_group), FadeIn(guess_group))
+            # Move the square to the next cell (one step to the right)
+            guess = [3, 0, 4, 1, 9, 5, 4]
+            for i in range(7):
+                guess_value_new = MathTex(str(guess[i])).set(font_size=48, color=WHITE)
+                guess_value_new.move_to(guess_box.get_center() + DOWN * 0.1)
+                self.play(selection_square.animate.shift(RIGHT * image_cell_width), Transform(guess_value, guess_value_new)) 
+                self.wait(0.5)
+
         with self.voiceover(text="Leons asks: so what are these parameters?") as tracker:
-            self.play(FadeOut(mnist_img), FadeOut(title_text))
+            self.play(FadeOut(mnist_img), FadeOut(title_text), FadeOut(model_group), FadeOut(guess_group), FadeOut(selection_square))
             
             # Stick figure creation
             head = Circle(radius=0.5, color=WHITE).shift(UP * 1.5)
@@ -565,91 +603,198 @@ class TrainingScene(VoiceoverScene):
             )
             
             self.wait(3)
-        # --- Voiceover Part 4: Weights Explanation (The Math) ---
-        # with self.voiceover(text="How researchers simulate those connections is by using weights, basically multiplication factors. This connection has a higher weight than this one.") as tracker:
-            
-        #     # Highlight the first strong connection
-        #     focus_conn = strong_lines[0]
-            
-        #     # Dim everything else slightly to focus
-        #     self.play(brain_group.animate.set_opacity(0.2), focus_conn['line'].animate.set_opacity(1))
-            
-        #     # Show "Input: 50" at start
-        #     input_label = MathTex("Input: 50").next_to(focus_conn['start_pos'], UP).scale(0.6).set_color(YELLOW)
-        #     self.play(Write(input_label))
-            
-        #     # Wiggle the line to show it is the "Weight"
-        #     self.play(Wiggle(focus_conn['line'], scale_value=1.3, rotation_angle=0.05*TAU), run_time=1.5)
-            
-        #     # Label the weight
-        #     weight_label = MathTex("Weight: 2.0").next_to(focus_conn['line'], UP).shift(DOWN*0.3).scale(0.6)
-        #     self.play(Transform(input_label, weight_label))
+        self.play(FadeOut(brain_group), FadeOut(circle_neurons), FadeOut(weight_one), FadeOut(weight_two), FadeOut(equation), FadeOut(res_left), FadeOut(res_mid), FadeOut(res_right), FadeOut(input_label), FadeOut(strong_result), FadeOut(weak_result))
 
-        # with self.voiceover(text="So if we have our original input, let's say the value is 50. It get's multiplied by these factors and we end up with this.") as tracker:
+class TrainingScenePart2(VoiceoverScene):
+    def construct(self):
+        self.set_speech_service(GTTSService())
+        with self.voiceover(text="Now let's go back to our dataset. This is a single image from the MNIST dataset.") as tracker:
             
-        #     # Show the calculation clearly on the right side of the screen
-        #     math_eq = MathTex("50", "\\times", "2.0", "=", "100")
-        #     math_eq.scale(1.2).to_edge(RIGHT, buff=2)
-            
-        #     # Color coding
-        #     math_eq[0].set_color(YELLOW) # Input
-        #     math_eq[2].set_color(BLUE)   # Weight
-            
-        #     self.play(Write(math_eq))
-        #     self.wait(1)
-            
-        #     # Show result appearing at the end of the line
-        #     result_dot = Circle(radius=0.2, color=YELLOW, fill_opacity=1).move_to(focus_conn['end_pos'])
-        #     result_label = MathTex("100").next_to(result_dot, RIGHT).scale(0.7)
-            
-        #     self.play(FadeIn(result_dot), Write(result_label))
-        #     self.wait(1)
-            
-        #     # Cleanup math for next part
-        #     self.play(FadeOut(input_label), FadeOut(weight_label), FadeOut(math_eq))
+            img = ImageMobject(r"C:\Users\calvi\Documents\Projects\ManimExperiment\media\images\mnist_example_0.png").move_to(ORIGIN + LEFT * 1.6)
+            img.scale(4)
+            self.play(FadeIn(img))
+            self.wait(1)
+        
+        with self.voiceover(text="This image gets converted into numerical values between 0 and 100, representing the darkness of each individual pixel.") as tracker:
+            # Show pixel grid next to image
+            pixel_grid = VGroup()
+            grid_size = 28
+            cell_size = 0.03
+            for i in range(grid_size):
+                for j in range(grid_size):
+                    rect = Rectangle(width=cell_size, height=cell_size, stroke_width=0.2, color=WHITE)
+                    rect.move_to(img.get_corner(UP + LEFT) + RIGHT * (j * cell_size + cell_size / 2) + DOWN * (i * cell_size + cell_size / 2))
+                    pixel_grid.add(rect)
+            self.play(FadeIn(pixel_grid))
+            self.wait(2)
+        
+        with self.voiceover(text="These values are then fed into the neural network as inputs, where each pixel is directly connected to a single neuron in the first layer.") as tracker:
+            grid_copy = pixel_grid.copy()
+            self.add(grid_copy)
 
+            input_neurons = VGroup()
+            x_pos = -0.6
+            radius = 0.08
+            distance = 0.22
+            # Top 5 circles
+            for i in range(3):
+                input_neurons.add(Circle(radius=radius, color=WHITE, stroke_width=0.2, fill_color=BLACK, fill_opacity=1).move_to([x_pos, 0.85- i * distance, 0]))
+            
+            # Dotted line (vertical dots)
+            for i in range(4):
+                input_neurons.add(Dot(point=[x_pos, 0.05 - i * 0.12, 0], radius=0.03, color=WHITE))
+            
+            # Bottom 5 circles
+            for i in range(3):
+                input_neurons.add(Circle(radius=radius, color=WHITE, stroke_width =0.2, fill_color=BLACK, fill_opacity=1).move_to([x_pos, -0.55 - i * distance, 0]))
+            self.play(Transform(grid_copy, input_neurons), run_time=2)
+            self.wait(1)
 
-        # # --- Voiceover Part 5: Summation ---
-        # with self.voiceover(text="Now the next layer is a bit more complex, because these have multiple inputs. Again, the value is getting multiplied by the weight. But this time its summed together.") as tracker:
+        with self.voiceover(text="From here the signal propagates through the network, getting processed in each layer based on the learned weights, until it reaches the output layer which provides the final prediction.") as tracker:
+            hidden_layer = VGroup()
+            x_pos_hidden = 0.0
+            stroke_opacity = 0.8
+
+            # Top 2 circles
+            for i in range(2):
+                hidden_layer.add(Circle(radius=radius, color=WHITE, stroke_width=0.2, fill_color=BLACK, fill_opacity=1).move_to([x_pos_hidden, 0.6 - i * distance, 0]))
             
-        #     # Reset opacity
-        #     self.play(brain_group.animate.set_opacity(1))
+            # Dotted line (vertical dots)
+            for i in range(4):
+                hidden_layer.add(Dot(point=[x_pos_hidden, 0.05 - i * 0.12, 0], radius=0.03, color=WHITE))
             
-        #     # Focus on a neuron in Layer 2 (index 1) which has two incoming connections in our grid
-        #     # Let's pick the one we just landed on (strong_lines[0]['end_neuron'])
-        #     target_neuron_loc = strong_lines[0]['end_pos']
+            # Bottom 2 circles
+            for i in range(2):
+                hidden_layer.add(Circle(radius=radius, color=WHITE, stroke_width =0.2, fill_color=BLACK, fill_opacity=1).move_to([x_pos_hidden, -0.55 - i * distance, 0]))
             
-        #     # Find a second weak connection going to the SAME location
-        #     weak_conn = None
-        #     for c in connections:
-        #         # Close enough match to target
-        #         if np.linalg.norm(c['end_pos'] - target_neuron_loc) < 0.1 and c != focus_conn:
-        #             weak_conn = c
-        #             break
+            # Connect input to hidden layer 1
+            connections1 = VGroup()
+            # grid_copy (transformed to circles) is essentially our input_neurons layer now
+            for n1 in input_neurons: 
+                for n2 in hidden_layer:
+                    if not isinstance(n1, Circle) or not isinstance(n2, Circle):
+                        continue
+                    connections1.add(Line(n1.get_center(), n2.get_center(), stroke_width=0.05, stroke_opacity=stroke_opacity).set_z_index(-1))
             
-        #     if weak_conn:
-        #         # Animate two signals arriving
-        #         s1 = Circle(radius=0.15, color=YELLOW, fill_opacity=1).move_to(focus_conn['start_pos'])
-        #         s2 = Circle(radius=0.08, color=YELLOW, fill_opacity=0.5).move_to(weak_conn['start_pos']) # Weak signal
+            self.play(Create(connections1), FadeIn(hidden_layer), run_time=1.5)
+            
+            hidden_layer_2 = hidden_layer.copy()
+            x_pos_hidden_2 = 0.6
+            for idx, neuron in enumerate(hidden_layer_2):
+                # We need to manually move them because copy preserves original location until moved
+                # Re-calculate position based on index to be safe, or just shift relative
+                target_y = hidden_layer[idx].get_center()[1]
+                neuron.move_to([x_pos_hidden_2, target_y, 0])
+
+            # Connect hidden layer 1 to hidden layer 2
+            connections2 = VGroup()
+            for n1 in hidden_layer:
+                for n2 in hidden_layer_2:
+                    if not isinstance(n1, Circle) or not isinstance(n2, Circle):
+                        continue
+                    connections2.add(Line(n1.get_center(), n2.get_center(), stroke_width=0.05, stroke_opacity=stroke_opacity).set_z_index(-1))
+
+            self.play(Create(connections2), FadeIn(hidden_layer_2), run_time=1.5)
+            
+            output_neurons = VGroup()
+            x_pos_output = 1.2
+            for i in range(10):
+                output_neurons.add(Circle(radius=radius, color=WHITE, stroke_width=0.2, fill_color=BLACK, fill_opacity=1).move_to([x_pos_output, 1.0 - i * distance, 0]))
+            
+            # Connect hidden layer 2 to output layer
+            connections3 = VGroup()
+            for n1 in hidden_layer_2:
+                for n2 in output_neurons:
+                    if not isinstance(n1, Circle) or not isinstance(n2, Circle):
+                        continue
+                    connections3.add(Line(n1.get_center(), n2.get_center(), stroke_width=0.05, stroke_opacity=stroke_opacity).set_z_index(-1))
+
+            self.play(Create(connections3), FadeIn(output_neurons), run_time=1.5)
+            self.wait(2)
+
+        with self.voiceover(text="Each of those 10 output corresponds with a prediction.") as tracker:
+            prediction_labels = VGroup()
+            for idx, neuron in enumerate(output_neurons):
+                label = MathTex(str(idx)).scale(0.2).move_to(neuron.get_center())
+                prediction_labels.add(label)
+            self.play(Write(prediction_labels), run_time=1)
+            self.wait(2)
+
+        with self.voiceover(text="In this case we want the model to predict 4. So this one should idealy have a value of 100, while the rest should be 0") as tracker:
+            target_column = VGroup()
+            for i in range(10):
+                val_text = "100" if i == 4 else "0"
+                val_obj = Text(val_text, font_size=10, color=WHITE)
+                val_obj.next_to(output_neurons[i], RIGHT, buff=0.30)
+                target_column.add(val_obj)
+
+            # target_header = Text("Target", font_size=10, color=WHITE).next_to(target_column, ORIGIN +RIGHT*0.4, buff=0.2)
+            
+            self.play(Write(target_column))
+            # self.play(output_neurons[4].animate.set_stroke(GREEN, width=4))
+            self.wait(2)
+        
+        with self.voiceover(text="However, in the beginning the weights are either 0, or randomly initialized. So the output values are not accurate. Let's initialize the weights randomly and see what the model will predict then.") as tracker:
+            values = [46, 40, 12, 5, 78, 23, 34, 9, 67, 11]
+            for label in prediction_labels:
+                random_value = str(values[int(label.tex_string)])
+                new_label = MathTex(random_value).scale(0.15).move_to(label.get_center())
+                self.play(Transform(label, new_label), run_time=0.3)
+
+        with self.voiceover(text="As you can see, the prediction is quite off. None of the outputs are close to the target values. This is where the learning phase comes in.") as tracker:
+            # Move the entire scene to the left to make space
+            scene_group = Group(
+                img, pixel_grid, grid_copy,
+                hidden_layer, hidden_layer_2, output_neurons,
+                connections1, connections2, connections3,
+                prediction_labels, target_column
+            )
+
+            move_factor = 10
+            # target_header.move_to(target_header.get_center() + RIGHT * move_factor)
+            self.play(
+                target_column.animate.shift(RIGHT * move_factor),
+                scene_group.animate.shift(LEFT * 1.5).scale(0.8)                
+            )
+
+            # self.play(scene_group.animate.shift(LEFT * 2).scale(0.8))
+            
+            self.wait(2)
+        with self.voiceover(text="During training, the model adjusts its weights based on the error in its predictions compared to the target values. Over many iterations, it learns to minimize this error, improving its accuracy.") as tracker:
+            # Create Error Column
+            error_column = VGroup()
+            error_header = Text("Error", font_size=10, color=RED).scale(0.4)
+            target_header = Text("Target", font_size=10, color=WHITE).scale(0.4)
+            prediction_header = Text("Prediction", font_size=10, color=WHITE).scale(0.4)
+
+            # Determine a fixed X position for the error column based on the header or the widest element
+            target_header.next_to(target_column, UP + LEFT * 0.1, buff=0.1).shift(RIGHT * 0.1)
+            error_header.next_to(target_column, RIGHT, buff=0.15)
+            prediction_header.next_to(output_neurons, ORIGIN, buff=0.1)
+            
+            # Align bottoms of all headers to the target_header
+            error_header.align_to(target_header, DOWN)
+            prediction_header.align_to(target_header, DOWN).shift(UP * 0.02)
+
+            
+            # error_header.shift(UP * 2)
+            # Use the header's X position to align all error values
+            error_col_x = error_header.get_center()[0]
+
+            for i in range(10):
+                # Calculate abs difference for visual
+                target_val = 100 if i == 4 else 0
+                current_valv = values[i]
+                diff = abs(target_val - current_valv)
                 
-        #         self.play(FadeIn(s1), FadeIn(s2))
+                err_text = Text(str(diff), font_size=10, color=RED).scale(0.8)
                 
-        #         # Move them to the target
-        #         self.play(
-        #             s1.animate.move_to(focus_conn['end_pos']),
-        #             s2.animate.move_to(weak_conn['end_pos']),
-        #             run_time=1.5
-        #         )
+                # Align vertically with the row, but horizontally with the header
+                # Get Y from the specific target row item
+                row_y = target_column[i].get_center()[1]
+                err_text.move_to([error_col_x, row_y, 0])
                 
-        #         # Show Summation Math
-        #         # 100 (from strong) + 10 (from weak)
-        #         sum_eq = MathTex("100", "+", "10", "=", "110")
-        #         sum_eq.scale(1.2).to_edge(RIGHT, buff=2)
-                
-        #         self.play(Write(sum_eq))
-                
-        #         # Merge dots into one big dot
-        #         final_dot = Circle(radius=0.25, color=GREEN, fill_opacity=1).move_to(target_neuron_loc)
-        #         self.play(Transform(s1, final_dot), FadeOut(s2), FadeOut(result_dot), FadeOut(result_label))
-                
-        #         self.wait(2)
+                error_column.add(err_text)
+
+            self.play(Write(prediction_header), Write(target_header), Write(error_header), Write(error_column))
+            self.wait(2)
